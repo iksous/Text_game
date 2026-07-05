@@ -4,6 +4,7 @@ import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -14,6 +15,7 @@ public class GameWindow {
 
     private Label locationName;
     private Label locationDescription;
+    private ImageView imageView;
 
     public GameWindow(Game game) {
 
