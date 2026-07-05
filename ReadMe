@@ -1,0 +1,5 @@
+prve si spusť kódovací program (VS, IntelliJ - preferovaný)
+po naklonvání kódu se ujisti, že používáš Java 25
+https://openjfx.io - stáhni si z toho java FX 26.0.1 a rozbal si to v nějaké složce na pc (třeba dokumenty)
+v IntelliJ pak file -> project structure -> libraries -> přidat library -> java -> a pak si najdi svou složku s Java FX a tam jednou klikni na složku lib a dole použít tuto složku
+Pak by to mělo jít
