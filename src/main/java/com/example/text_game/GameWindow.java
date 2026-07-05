@@ -188,7 +188,7 @@ public class GameWindow {
             buyPotion.setDisable(game.getPlayer().getGold() < 10);
             buyPotion.setOnAction(e -> {
                 game.getPlayer().removeGold(10);
-                game.getPlayer().addItem("Health postion");
+                game.getPlayer().addItem("Health potion");
                 refresh(game);
             });
 

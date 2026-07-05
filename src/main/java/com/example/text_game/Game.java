@@ -26,7 +26,7 @@ public class Game {
         combatLog = "";
         actualLocation = new Location(
                 "Village Square",
-                "Nacházíš se na bezpečné návsi středověké vesnice. Odsud můžeš navštívit místní obchody.",
+                "You enetered small village where you can choose to go to king, forest or buy new equipment.",
                 "images/Village.png");
     }
 
@@ -34,7 +34,7 @@ public class Game {
         combatLog = "";
         actualLocation = new Location(
                 "Blacksmith",
-                "U kováře to žhne a zvoní kladivy. Nabízí ostré zbraně a pevná brnění.",
+                "Blacksmith is hard working. But he offeres you his hand made weapons and armor.",
                 "images/Village.png");
     }
 
@@ -42,7 +42,7 @@ public class Game {
         combatLog = "";
         actualLocation = new Location(
                 "Alchemist",
-                "Vzduch zde voní po bylinkách a síře. Alchymistka prodává magické lektvary.",
+                "The air contains traces or herbs and sulfur. The alchemist offeres you her potions",
                 "images/Village.png");
     }
 
@@ -50,22 +50,22 @@ public class Game {
         combatLog = "";
         actualLocation = new Location(
                 "Forest",
-                "Vstoupil jsi do temného lesa. Mezi stromy se něco pohnulo!",
+                "You enetered dark forest",
                 "images/Forest.png");
         spawnEnemy();
     }
 
     public void spawnEnemy() {
         // Vytvoří Goblina: 30-50 HP, útok 5-12, odměna 15-30 goldů
-        currentEnemy = new Enemy("Lesní Goblin", 30, 50, 5, 12, 15, 30);
-        combatLog = "Vyskočil na tebe " + currentEnemy.getName() + "!";
+        currentEnemy = new Enemy("Goblin", 30, 50, 5, 12, 15, 30);
+        combatLog = currentEnemy.getName() + "found you!";
     }
 
     public void goIntoCastle() {
         combatLog = "";
         actualLocation = new Location(
                 "Castle",
-                "Stojíš v trůním sále majestátního hradu. Na trůnu sedí ustaraný král.",
+                "You stand in throne room. Maybe king wants to give you some quests",
                 "images/Castle.png");
     }
 }
