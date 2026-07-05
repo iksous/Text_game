@@ -1,15 +1,15 @@
 package com.example.text_game;
 
 public class Location {
+
     private String name;
     private String description;
-    private String picture;
+    private String image;
 
-    public Location(String name, String description, String picture) {
-
+    public Location(String name, String description, String image) {
         this.name = name;
         this.description = description;
-        this.picture = picture;
+        this.image = image;
     }
 
     public String getName() {
@@ -20,7 +20,7 @@ public class Location {
         return description;
     }
 
-    public String getPicture() {
-        return picture;
+    public String getImage() {
+        return image;
     }
 }
