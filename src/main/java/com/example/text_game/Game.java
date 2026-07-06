@@ -56,7 +56,6 @@ public class Game {
     }
 
     public void spawnEnemy() {
-        // Vytvoří Goblina: 30-50 HP, útok 5-12, odměna 15-30 goldů
         currentEnemy = new Enemy("Goblin", 30, 50, 5, 12, 15, 30);
         combatLog = currentEnemy.getName() + "found you!";
     }
