@@ -24,12 +24,14 @@ public class GameWindow {
     // Hotbar components
     private Label characterNameLabel;
     private Label healthLabel;
+    private Label manaLabel; // NOVÉ
     private Label goldLabel;
     private Label attackLabel;
     private Label defenseLabel;
     private Label itemsLabel;
     private Label questsLabel;
     private Button usePotionBtn;
+    private Button useManaBtn; // NOVÉ
 
     public GameWindow(Game game) {
         root = new BorderPane();
@@ -37,7 +39,6 @@ public class GameWindow {
         // --- CENTER PANEL ---
         locationName = new Label();
         locationName.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
-
         locationDescription = new Label();
         locationDescription.setWrapText(true);
         locationDescription.setStyle("-fx-font-size: 14px;");
@@ -47,17 +48,14 @@ public class GameWindow {
         imageView.setFitHeight(250);
         imageView.setPreserveRatio(true);
 
-        VBox textContainer = new VBox(10);
-        textContainer.getChildren().addAll(locationName, locationDescription);
-
+        VBox textContainer = new VBox(10, locationName, locationDescription);
         ScrollPane scrollPane = new ScrollPane(textContainer);
         scrollPane.setFitToWidth(true);
-        scrollPane.setStyle("-fx-background-color: transparent; -fx-background-insets: 0; -fx-padding: 0;");
+        scrollPane.setStyle("-fx-background-color: transparent; -fx-padding: 0;");
         scrollPane.setPrefHeight(200);
 
-        VBox center = new VBox(15);
+        VBox center = new VBox(15, imageView, scrollPane);
         center.setPadding(new Insets(20));
-        center.getChildren().addAll(imageView, scrollPane);
 
         // --- RIGHT PANEL (Hotbar) ---
         VBox sidebar = new VBox(12);
@@ -68,25 +66,26 @@ public class GameWindow {
         Label sidebarTitle = new Label("Hero Status");
         sidebarTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
 
-        characterNameLabel = new Label(); // Aktualizuje se dynamicky v refresh()
+        characterNameLabel = new Label();
         healthLabel = new Label();
         healthLabel.setStyle("-fx-text-fill: #cc0000; -fx-font-weight: bold;");
+
+        // NOVÉ: Label pro zobrazení Many
+        manaLabel = new Label();
+        manaLabel.setStyle("-fx-text-fill: #0066cc; -fx-font-weight: bold;");
 
         goldLabel = new Label();
         goldLabel.setStyle("-fx-text-fill: #b38600; -fx-font-weight: bold;");
 
         attackLabel = new Label();
         defenseLabel = new Label();
-
         Label itemsTitle = new Label("Inventory:");
         itemsTitle.setStyle("-fx-font-weight: bold;");
-
         itemsLabel = new Label();
         itemsLabel.setWrapText(true);
 
         Label questsTitle = new Label("Quests:");
         questsTitle.setStyle("-fx-font-weight: bold;");
-
         questsLabel = new Label();
         questsLabel.setWrapText(true);
 
@@ -99,26 +98,27 @@ public class GameWindow {
             }
         });
 
-        // NOVÉ: Tlačítka pro Save a Load systému
+        // NOVÉ: Tlačítko pro pití mana elixíru
+        useManaBtn = new Button("Drink Mana Elixir (+30 MP)");
+        useManaBtn.setMaxWidth(Double.MAX_VALUE);
+        useManaBtn.setOnAction(e -> {
+            if (game.getPlayer().useManaElixir()) {
+                game.setCombatLog("You drank a Mana Elixir and restored 30 MP.");
+                refresh(game);
+            }
+        });
+
         Button saveBtn = new Button("Save Game");
         saveBtn.setMaxWidth(Double.MAX_VALUE);
-        saveBtn.setStyle("-fx-background-color: #e1f5fe; -fx-border-color: #b3e5fc;");
-        saveBtn.setOnAction(e -> {
-            game.saveGame();
-            refresh(game);
-        });
+        saveBtn.setOnAction(e -> { game.saveGame(); refresh(game); });
 
         Button loadBtn = new Button("Load Game");
         loadBtn.setMaxWidth(Double.MAX_VALUE);
-        loadBtn.setStyle("-fx-background-color: #efebe9; -fx-border-color: #d7ccc8;");
-        loadBtn.setOnAction(e -> {
-            game.loadGame();
-            refresh(game);
-        });
+        loadBtn.setOnAction(e -> { game.loadGame(); refresh(game); });
 
         sidebar.getChildren().addAll(
-                sidebarTitle, characterNameLabel, healthLabel, goldLabel, attackLabel, defenseLabel,
-                itemsTitle, itemsLabel, questsTitle, questsLabel, usePotionBtn, saveBtn, loadBtn
+                sidebarTitle, characterNameLabel, healthLabel, manaLabel, goldLabel, attackLabel, defenseLabel,
+                itemsTitle, itemsLabel, questsTitle, questsLabel, usePotionBtn, useManaBtn, saveBtn, loadBtn
         );
 
         // --- BOTTOM PANEL ---
@@ -137,6 +137,7 @@ public class GameWindow {
     private void refresh(Game game) {
         String fullDescription = game.getActualLocation().getDescription();
         String currentImagePath = game.getActualLocation().getImage();
+        Player p = game.getPlayer();
 
         if (game.getActualLocation().getName().equals("Forest") && game.getCurrentEnemy() != null) {
             Enemy e = game.getCurrentEnemy();
@@ -155,128 +156,140 @@ public class GameWindow {
         updateImage(currentImagePath);
 
         // Hotbar updates
-        characterNameLabel.setText("Name: " + game.getPlayer().getName()); // Zde opraveno pro správný refresh jména
-        healthLabel.setText("Health: " + game.getPlayer().getHealth() + " HP");
-        goldLabel.setText("Gold: " + game.getPlayer().getGold() + "g");
-        attackLabel.setText("Attack: " + game.getPlayer().getAttackPower());
-        defenseLabel.setText("Defense: " + game.getPlayer().getDefense());
+        characterNameLabel.setText("Name: " + p.getName() + " (" + p.getPlayerClass() + ")");
+        healthLabel.setText("Health: " + p.getHealth() + " HP");
 
-        if (game.getPlayer().getInventory().isEmpty()) {
+        // Zobrazování many pouze pro Mága
+        if (p.getPlayerClass().equals("Mage")) {
+            manaLabel.setVisible(true);
+            manaLabel.setManaged(true);
+            manaLabel.setText("Mana: " + p.getMana() + "/" + p.getMaxMana() + " MP");
+            useManaBtn.setVisible(true);
+            useManaBtn.setManaged(true);
+            useManaBtn.setDisable(!p.getInventory().contains("Mana Elixir"));
+        } else {
+            manaLabel.setVisible(false);
+            manaLabel.setManaged(false);
+            useManaBtn.setVisible(false);
+            useManaBtn.setManaged(false);
+        }
+
+        goldLabel.setText("Gold: " + p.getGold() + "g");
+
+        if (p.getPlayerClass().equals("Mage")) {
+            attackLabel.setText("Spell Power: " + p.getMagicAttack() + " (Melee: " + p.getAttackPower() + ")");
+        } else {
+            attackLabel.setText("Attack: " + p.getAttackPower());
+        }
+
+        defenseLabel.setText("Defense: " + p.getDefense());
+
+        if (p.getInventory().isEmpty()) {
             itemsLabel.setText("(empty)");
         } else {
-            itemsLabel.setText("• " + String.join("\n• ", game.getPlayer().getInventory()));
+            itemsLabel.setText("• " + String.join("\n• ", p.getInventory()));
         }
 
-        // Quest updates
+        // Quest states
         switch (game.getQuestState()) {
-            case "AVAILABLE":
-            case "INSPECTING":
-                questsLabel.setText("• No active quest");
-                questsLabel.setStyle("-fx-text-fill: #888888;");
-                break;
-            case "ACTIVE":
-                questsLabel.setText("• Slay the Forest Goblin");
-                questsLabel.setStyle("-fx-text-fill: #0066cc; -fx-font-weight: bold;");
-                break;
-            case "DONE":
-                questsLabel.setText("• Return to the King!");
-                questsLabel.setStyle("-fx-text-fill: #009933; -fx-font-weight: bold;");
-                break;
-            case "REWARDED":
-                questsLabel.setText("• No active quest (All done)");
-                questsLabel.setStyle("-fx-text-fill: #888888;");
-                break;
+            case "AVAILABLE": case "INSPECTING": questsLabel.setText("• No active quest"); questsLabel.setStyle("-fx-text-fill: #888888;"); break;
+            case "ACTIVE": questsLabel.setText("• Slay the Forest Goblin"); questsLabel.setStyle("-fx-text-fill: #0066cc; -fx-font-weight: bold;"); break;
+            case "DONE": questsLabel.setText("• Return to the King!"); questsLabel.setStyle("-fx-text-fill: #009933; -fx-font-weight: bold;"); break;
+            case "REWARDED": questsLabel.setText("• Quest completed"); questsLabel.setStyle("-fx-text-fill: #888888;"); break;
         }
 
-        usePotionBtn.setDisable(!game.getPlayer().getInventory().contains("Healing Potion"));
-
+        usePotionBtn.setDisable(!p.getInventory().contains("Healing Potion"));
         updateButtons(game);
     }
 
     private void updateButtons(Game game) {
         buttonLayout.getChildren().clear();
         String currentLoc = game.getActualLocation().getName();
+        Player p = game.getPlayer();
 
         if (currentLoc.equals("Village Square")) {
             Button forestBtn = new Button("Go to Forest");
             forestBtn.setOnAction(e -> { game.goIntoForest(); refresh(game); });
-
             Button castleBtn = new Button("Go to Castle");
             castleBtn.setOnAction(e -> { game.goIntoCastle(); refresh(game); });
-
             Button blacksmithBtn = new Button("Visit Blacksmith");
             blacksmithBtn.setOnAction(e -> { game.goIntoBlacksmith(); refresh(game); });
-
             Button alchemistBtn = new Button("Visit Alchemist");
             alchemistBtn.setOnAction(e -> { game.goIntoAlchemist(); refresh(game); });
-
             buttonLayout.getChildren().addAll(forestBtn, castleBtn, blacksmithBtn, alchemistBtn);
 
         } else if (currentLoc.equals("Blacksmith")) {
-            Button buySword = new Button("Buy Steel Sword (+8 Attack) [15g]");
-            buySword.setDisable(game.getPlayer().getGold() < 15 || game.getPlayer().getInventory().contains("Steel Sword"));
-            buySword.setOnAction(e -> {
-                game.getPlayer().removeGold(15);
-                game.getPlayer().addItem("Steel Sword");
-                game.getPlayer().addAttackPower(8);
-                refresh(game);
-            });
+            Button buySword = new Button("Buy Steel Sword (+8 Atk) [15g]");
+            buySword.setDisable(p.getGold() < 15 || p.getInventory().contains("Steel Sword") || p.getPlayerClass().equals("Mage"));
+            buySword.setOnAction(e -> { p.removeGold(15); p.addItem("Steel Sword"); p.addAttackPower(8); refresh(game); });
 
-            Button buyArmor = new Button("Buy Plate Armor (+4 Defense) [20g]");
-            buyArmor.setDisable(game.getPlayer().getGold() < 20 || game.getPlayer().getInventory().contains("Plate Armor"));
-            buyArmor.setOnAction(e -> {
-                game.getPlayer().removeGold(20);
-                game.getPlayer().addItem("Plate Armor");
-                game.getPlayer().addDefense(4);
-                refresh(game);
-            });
+            Button buyArmor = new Button("Buy Plate Armor (+4 Def) [20g]");
+            buyArmor.setDisable(p.getGold() < 20 || p.getInventory().contains("Plate Armor"));
+            buyArmor.setOnAction(e -> { p.removeGold(20); p.addItem("Plate Armor"); p.addDefense(4); refresh(game); });
 
             Button backBtn = new Button("Back to Village Square");
             backBtn.setOnAction(e -> { game.goIntoVillage(); refresh(game); });
-
             buttonLayout.getChildren().addAll(buySword, buyArmor, backBtn);
 
         } else if (currentLoc.equals("Alchemist")) {
             Button buyPotion = new Button("Buy Healing Potion [10g]");
-            buyPotion.setDisable(game.getPlayer().getGold() < 10);
-            buyPotion.setOnAction(e -> {
-                game.getPlayer().removeGold(10);
-                game.getPlayer().addItem("Healing Potion");
-                refresh(game);
-            });
+            buyPotion.setDisable(p.getGold() < 10);
+            buyPotion.setOnAction(e -> { p.removeGold(10); p.addItem("Healing Potion"); refresh(game); });
+
+            // NOVÉ: Nákup Mana elixíru u alchymistky
+            Button buyMana = new Button("Buy Mana Elixir [10g]");
+            buyMana.setDisable(p.getGold() < 10 || p.getPlayerClass().equals("Knight"));
+            buyMana.setOnAction(e -> { p.removeGold(10); p.addItem("Mana Elixir"); refresh(game); });
 
             Button backBtn = new Button("Back to Village Square");
             backBtn.setOnAction(e -> { game.goIntoVillage(); refresh(game); });
-
-            buttonLayout.getChildren().addAll(buyPotion, backBtn);
+            buttonLayout.getChildren().addAll(buyPotion, buyMana, backBtn);
 
         } else if (currentLoc.equals("Forest")) {
             Enemy enemy = game.getCurrentEnemy();
             if (enemy != null && !enemy.isDead()) {
                 Button attackBtn = new Button("Attack");
                 attackBtn.setOnAction(e -> {
-                    int playerDmg = game.getPlayer().getAttackPower();
-                    enemy.takeDamage(playerDmg);
-                    String log = "You dealt " + playerDmg + " damage to the Goblin.";
+                    boolean canAttack = true;
+                    String log = "";
+                    int damageDealt = 0;
 
-                    if (enemy.isDead()) {
-                        log += "\nYou defeated it! You found " + enemy.getGoldReward() + " gold.";
-                        game.getPlayer().addGold(enemy.getGoldReward());
-
-                        if (game.getQuestState().equals("ACTIVE")) {
-                            game.setQuestState("DONE");
-                            log += "\n[Quest Updated: Return to the King for your reward!]";
+                    // Kontrola podmínek pro Mága (Vyžaduje Wand a minimálně 10 Many)
+                    if (p.getPlayerClass().equals("Mage")) {
+                        boolean hasWand = p.getInventory().stream().anyMatch(item -> item.toLowerCase().contains("wand"));
+                        if (!hasWand) {
+                            log = "You cannot attack! A Mage requires a Wand to cast spells.";
+                            canAttack = false;
+                        } else if (p.getMana() < 10) {
+                            log = "Not enough Mana! Cast requires 10 MP. Use a Mana Elixir or move to regenerate.";
+                            canAttack = false;
+                        } else {
+                            p.setMana(p.getMana() - 10); // Spotřeba many
+                            damageDealt = p.getMagicAttack();
                         }
                     } else {
-                        int enemyDmg = Math.max(1, enemy.getRandomDamage() - game.getPlayer().getDefense());
-                        game.getPlayer().damage(enemyDmg);
-                        log += "\nThe Goblin counter-attacked for " + enemyDmg + " damage.";
+                        damageDealt = p.getAttackPower();
+                    }
 
-                        if (game.getPlayer().getHealth() <= 0) {
-                            log = "You died in battle! Villagers rescued you, but you lost half your gold.";
-                            game.getPlayer().healing(40);
-                            game.getPlayer().removeGold(game.getPlayer().getGold() / 2);
-                            game.goIntoVillage();
+                    if (canAttack) {
+                        enemy.takeDamage(damageDealt);
+                        log = "You dealt " + damageDealt + " damage to the Goblin.";
+
+                        if (enemy.isDead()) {
+                            log += "\nYou defeated it! You found " + enemy.getGoldReward() + " gold.";
+                            p.addGold(enemy.getGoldReward());
+                            if (game.getQuestState().equals("ACTIVE")) game.setQuestState("DONE");
+                        } else {
+                            int enemyDmg = Math.max(1, enemy.getRandomDamage() - p.getDefense());
+                            p.damage(enemyDmg);
+                            log += "\nThe Goblin counter-attacked for " + enemyDmg + " damage.";
+
+                            if (p.getHealth() <= 0) {
+                                log = "You died! Villagers rescued you, but you lost half your gold.";
+                                p.healing(40);
+                                p.removeGold(p.getGold() / 2);
+                                game.goIntoVillage();
+                            }
                         }
                     }
                     game.setCombatLog(log);
@@ -285,70 +298,32 @@ public class GameWindow {
 
                 Button fleeBtn = new Button("Flee to Village");
                 fleeBtn.setOnAction(e -> { game.goIntoVillage(); refresh(game); });
-
                 buttonLayout.getChildren().addAll(attackBtn, fleeBtn);
             } else {
                 Button searchBtn = new Button("Search for another monster");
                 searchBtn.setOnAction(e -> { game.spawnEnemy(); refresh(game); });
-
                 Button backBtn = new Button("Back to Village");
                 backBtn.setOnAction(e -> { game.goIntoVillage(); refresh(game); });
-
                 buttonLayout.getChildren().addAll(searchBtn, backBtn);
             }
 
         } else if (currentLoc.equals("Castle")) {
-
             if (game.getQuestState().equals("AVAILABLE")) {
                 Button inspectBtn = new Button("Inspect Quest");
-                inspectBtn.setOnAction(e -> {
-                    game.setQuestState("INSPECTING");
-                    game.setCombatLog("The King says: 'Brave hero, dangerous goblins are terrorizing the forest! Slay one of them and I shall reward you handsomely.'");
-                    refresh(game);
-                });
+                inspectBtn.setOnAction(e -> { game.setQuestState("INSPECTING"); game.setCombatLog("The King requests you to slay a Forest Goblin!"); refresh(game); });
                 buttonLayout.getChildren().add(inspectBtn);
-
             } else if (game.getQuestState().equals("INSPECTING")) {
                 Button acceptBtn = new Button("Accept Quest");
-                acceptBtn.setOnAction(e -> {
-                    game.setQuestState("ACTIVE");
-                    game.setCombatLog("Quest Accepted! Go to the Forest and defeat the goblin.");
-                    refresh(game);
-                });
-
+                acceptBtn.setOnAction(e -> { game.setQuestState("ACTIVE"); game.setCombatLog("Quest Accepted!"); refresh(game); });
                 Button waitBtn = new Button("Wait");
-                waitBtn.setOnAction(e -> {
-                    game.setQuestState("AVAILABLE");
-                    game.setCombatLog("You decided to wait. The King looks disappointed.");
-                    refresh(game);
-                });
-
+                waitBtn.setOnAction(e -> { game.setQuestState("AVAILABLE"); refresh(game); });
                 buttonLayout.getChildren().addAll(acceptBtn, waitBtn);
-
             } else if (game.getQuestState().equals("ACTIVE")) {
-                Button waitingBtn = new Button("King is waiting...");
-                waitingBtn.setDisable(true);
-                buttonLayout.getChildren().add(waitingBtn);
-
+                Button waitingBtn = new Button("King is waiting..."); waitingBtn.setDisable(true); buttonLayout.getChildren().add(waitingBtn);
             } else if (game.getQuestState().equals("DONE")) {
                 Button claimBtn = new Button("Claim Reward");
-                claimBtn.setOnAction(e -> {
-                    game.setQuestState("REWARDED");
-                    game.getPlayer().addGold(40);
-                    game.getPlayer().addItem("Royal Sword");
-                    game.getPlayer().addAttackPower(15);
-                    game.setCombatLog("The King cheers: 'Thank you, savior! Here is your reward: 40 gold and my personal Royal Sword!'");
-                    refresh(game);
-                });
+                claimBtn.setOnAction(e -> { p.addGold(40); p.addItem("Royal Sword"); p.addAttackPower(15); game.setQuestState("REWARDED"); refresh(game); });
                 buttonLayout.getChildren().add(claimBtn);
-
-            } else if (game.getQuestState().equals("REWARDED")) {
-                Button talkBtn = new Button("Talk to King");
-                talkBtn.setOnAction(e -> {
-                    game.setCombatLog("The King says: 'My kingdom is forever in your debt, hero.'");
-                    refresh(game);
-                });
-                buttonLayout.getChildren().add(talkBtn);
             }
 
             Button backBtn = new Button("Back to Village");
@@ -360,13 +335,8 @@ public class GameWindow {
     private void updateImage(String imagePath) {
         try {
             URL resourceUrl = getClass().getResource("/" + imagePath);
-            if (resourceUrl != null) {
-                Image image = new Image(resourceUrl.toExternalForm());
-                imageView.setImage(image);
-            }
-        } catch (Exception e) {
-            System.out.println("Image error: " + e.getMessage());
-        }
+            if (resourceUrl != null) imageView.setImage(new Image(resourceUrl.toExternalForm()));
+        } catch (Exception e) { System.out.println("Image error: " + e.getMessage()); }
     }
 
     public Parent getRoot() { return root; }

@@ -5,9 +5,12 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.TextInputDialog;
 import javafx.stage.Stage;
 import java.io.File;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 public class Main extends Application {
@@ -17,7 +20,7 @@ public class Main extends Application {
         Game game = null;
         File saveFile = new File("savegame.txt");
 
-        // 1. KROK: Zkontrolujeme, zda existuje uložená hra
+        // 1. KROK: Kontrola uložené hry
         if (saveFile.exists()) {
             ButtonType btnLoad = new ButtonType("Load Saved Game");
             ButtonType btnNew = new ButtonType("Start New Game");
@@ -30,31 +33,38 @@ public class Main extends Application {
 
             Optional<ButtonType> choice = alert.showAndWait();
 
-            // Pokud hráč kliknul na "Load Saved Game"
             if (choice.isPresent() && choice.get() == btnLoad) {
-                game = new Game("Hero"); // Dočasné jméno, load ho hned přepíše
+                game = new Game("Hero", "Knight"); // Dočasné hodnoty, load je přepíše
                 game.loadGame();
             }
         }
 
-        // 2. KROK: Pokud save neexistuje, nebo hráč zvolil "Start New Game" (nebo okno zavřel)
+        // 2. KROK: Nová hra (Jméno + Výběr Classy)
         if (game == null) {
-            TextInputDialog dialog = new TextInputDialog("Martin");
-            dialog.setTitle("Character Creation");
-            dialog.setHeaderText("Welcome to the Medieval Adventure!");
-            dialog.setContentText("Enter your hero's name:");
+            // A) Zadaní jména
+            TextInputDialog nameDialog = new TextInputDialog("Martin");
+            nameDialog.setTitle("Character Creation");
+            nameDialog.setHeaderText("Welcome to the Medieval Adventure!");
+            nameDialog.setContentText("Enter your hero's name:");
 
-            Optional<String> result = dialog.showAndWait();
-            String playerName = result.orElse("Hero").trim();
+            Optional<String> nameResult = nameDialog.showAndWait();
+            String playerName = nameResult.orElse("Hero").trim();
+            if (playerName.isEmpty()) playerName = "Hero";
 
-            if (playerName.isEmpty()) {
-                playerName = "Hero";
-            }
+            // B) Výběr třídy (Class)
+            List<String> classes = Arrays.asList("Knight", "Mage");
+            ChoiceDialog<String> classDialog = new ChoiceDialog<>("Knight", classes);
+            classDialog.setTitle("Class Selection");
+            classDialog.setHeaderText("Choose your destiny, " + playerName + "!");
+            classDialog.setContentText("Select your class:");
 
-            game = new Game(playerName);
+            Optional<String> classResult = classDialog.showAndWait();
+            String playerClass = classResult.orElse("Knight");
+
+            game = new Game(playerName, playerClass);
         }
 
-        // 3. KROK: Spuštění samotného herního okna
+        // 3. KROK: Spuštění okna
         GameWindow window = new GameWindow(game);
         Scene scene = new Scene(window.getRoot(), 1050, 650);
 

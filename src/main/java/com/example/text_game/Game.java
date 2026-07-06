@@ -10,8 +10,8 @@ public class Game {
     private String questState;
     private String combatLog = "";
 
-    public Game(String name) {
-        player = new Player(name);
+    public Game(String name, String playerClass) {
+        player = new Player(name, playerClass);
         questState = "AVAILABLE";
         goIntoVillage();
     }
@@ -24,7 +24,6 @@ public class Game {
     public String getCombatLog() { return combatLog; }
     public void setCombatLog(String log) { this.combatLog = log; }
 
-    // NOVÉ: Metoda pro uložení hry do souboru
     public void saveGame() {
         try (PrintWriter writer = new PrintWriter(new FileWriter("savegame.txt"))) {
             writer.println(player.getName());
@@ -32,10 +31,14 @@ public class Game {
             writer.println(player.getGold());
             writer.println(player.getAttackPower());
             writer.println(player.getDefense());
-            // Uloží inventář oddělený čárkami (např. "Rusty Sword,Healing Potion")
             writer.println(String.join(",", player.getInventory()));
             writer.println(questState);
             writer.println(actualLocation.getName());
+            // NOVÉ: Ukládání magických dat
+            writer.println(player.getPlayerClass());
+            writer.println(player.getMana());
+            writer.println(player.getMaxMana());
+            writer.println(player.getMagicAttack());
 
             combatLog = "Game successfully saved to 'savegame.txt'!";
         } catch (IOException e) {
@@ -43,40 +46,35 @@ public class Game {
         }
     }
 
-    // NOVÉ: Metoda pro načtení hry ze souboru
     public boolean loadGame() {
         File file = new File("savegame.txt");
         if (!file.exists()) {
-            combatLog = "No save file found! Save the game first.";
+            combatLog = "No save file found!";
             return false;
         }
 
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            String name = reader.readLine();
-            int health = Integer.parseInt(reader.readLine());
-            int gold = Integer.parseInt(reader.readLine());
-            int attack = Integer.parseInt(reader.readLine());
-            int defense = Integer.parseInt(reader.readLine());
+            player.setName(reader.readLine());
+            player.setHealth(Integer.parseInt(reader.readLine()));
+            player.setGold(Integer.parseInt(reader.readLine()));
+            player.setAttackPower(Integer.parseInt(reader.readLine()));
+            player.setDefense(Integer.parseInt(reader.readLine()));
+
             String inventoryLine = reader.readLine();
-            String savedQuestState = reader.readLine();
+            this.questState = reader.readLine();
             String savedLocationName = reader.readLine();
 
-            // Použití setterů k obnově hrdiny
-            player.setName(name);
-            player.setHealth(health);
-            player.setGold(gold);
-            player.setAttackPower(attack);
-            player.setDefense(defense);
+            // NOVÉ: Načítání magických dat
+            player.setPlayerClass(reader.readLine());
+            player.setMana(Integer.parseInt(reader.readLine()));
+            player.setMaxMana(Integer.parseInt(reader.readLine()));
+            player.setMagicAttack(Integer.parseInt(reader.readLine()));
 
             player.getInventory().clear();
             if (inventoryLine != null && !inventoryLine.trim().isEmpty()) {
-                String[] items = inventoryLine.split(",");
-                player.getInventory().addAll(Arrays.asList(items));
+                player.getInventory().addAll(Arrays.asList(inventoryLine.split(",")));
             }
 
-            this.questState = savedQuestState;
-
-            // Obnova správné lokace
             switch (savedLocationName) {
                 case "Village Square": goIntoVillage(); break;
                 case "Blacksmith": goIntoBlacksmith(); break;
@@ -95,36 +93,28 @@ public class Game {
     }
 
     public void goIntoVillage() {
+        if (player != null) player.regenerateManaOnMove();
         currentEnemy = null;
         combatLog = "";
-        actualLocation = new Location(
-                "Village Square",
-                "You are in the safe square of a medieval village. From here, you can visit local shops.",
-                "images/Village.png");
+        actualLocation = new Location("Village Square", "Safe village square.", "images/Village.png");
     }
 
     public void goIntoBlacksmith() {
+        player.regenerateManaOnMove();
         combatLog = "";
-        actualLocation = new Location(
-                "Blacksmith",
-                "The blacksmith's forge is glowing and ringing with hammers. He offers sharp weapons and sturdy armor.",
-                "images/Village.png");
+        actualLocation = new Location("Blacksmith", "The blacksmith forge.", "images/Village.png");
     }
 
     public void goIntoAlchemist() {
+        player.regenerateManaOnMove();
         combatLog = "";
-        actualLocation = new Location(
-                "Alchemist",
-                "The air here smells of herbs and sulfur. The alchemist sells magical potions.",
-                "images/Village.png");
+        actualLocation = new Location("Alchemist", "The alchemist lab.", "images/Village.png");
     }
 
     public void goIntoForest() {
+        player.regenerateManaOnMove();
         combatLog = "";
-        actualLocation = new Location(
-                "Forest",
-                "You have entered the dark forest. Something rustled between the old trees!",
-                "images/Forest.png");
+        actualLocation = new Location("Forest", "Dark forest.", "images/Forest.png");
         spawnEnemy();
     }
 
@@ -134,10 +124,8 @@ public class Game {
     }
 
     public void goIntoCastle() {
+        player.regenerateManaOnMove();
         combatLog = "";
-        actualLocation = new Location(
-                "Castle",
-                "You stand in the throne room of a majestic castle. An anxious King sits on the throne.",
-                "images/Castle.png");
+        actualLocation = new Location("Castle", "The majestic throne room.", "images/Castle.png");
     }
 }
