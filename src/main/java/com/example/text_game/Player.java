@@ -16,9 +16,9 @@ public class Player {
         this.health = 100;
         this.gold = 20;
         this.inventory = new ArrayList<>();
-        this.inventory.add("Rusty sword");
-        this.attackPower = 12; // Základní útok hráče
-        this.defense = 0;     // Základní obrana hráče
+        this.inventory.add("Rusty Sword");
+        this.attackPower = 12;
+        this.defense = 0;
     }
 
     public String getName() { return name; }
@@ -27,6 +27,13 @@ public class Player {
     public List<String> getInventory() { return inventory; }
     public int getAttackPower() { return attackPower; }
     public int getDefense() { return defense; }
+
+    // NOVÉ: Settery nutné pro správné načtení uložených dat
+    public void setName(String name) { this.name = name; }
+    public void setHealth(int health) { this.health = health; }
+    public void setGold(int gold) { this.gold = gold; }
+    public void setAttackPower(int attackPower) { this.attackPower = attackPower; }
+    public void setDefense(int defense) { this.defense = defense; }
 
     public void addGold(int sum) { gold += sum; }
     public void removeGold(int sum) {
@@ -50,9 +57,9 @@ public class Player {
     public void addItem(String item) { inventory.add(item); }
 
     public boolean usePotion() {
-        if (inventory.contains("Health potion")) {
-            inventory.remove("Health potion");
-            healing(40); // Lektvar vyléčí 40 HP
+        if (inventory.contains("Healing Potion")) {
+            inventory.remove("Healing Potion");
+            healing(40);
             return true;
         }
         return false;

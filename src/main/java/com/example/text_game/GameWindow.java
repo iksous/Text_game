@@ -68,7 +68,7 @@ public class GameWindow {
         Label sidebarTitle = new Label("Hero Status");
         sidebarTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
 
-        characterNameLabel = new Label("Name: " + game.getPlayer().getName());
+        characterNameLabel = new Label(); // Aktualizuje se dynamicky v refresh()
         healthLabel = new Label();
         healthLabel.setStyle("-fx-text-fill: #cc0000; -fx-font-weight: bold;");
 
@@ -90,7 +90,6 @@ public class GameWindow {
         questsLabel = new Label();
         questsLabel.setWrapText(true);
 
-        // Opravená akce pití lektvaru (vypíše log pokaždé)
         usePotionBtn = new Button("Drink Potion (+40 HP)");
         usePotionBtn.setMaxWidth(Double.MAX_VALUE);
         usePotionBtn.setOnAction(e -> {
@@ -100,7 +99,27 @@ public class GameWindow {
             }
         });
 
-        sidebar.getChildren().addAll(sidebarTitle, characterNameLabel, healthLabel, goldLabel, attackLabel, defenseLabel, itemsTitle, itemsLabel, questsTitle, questsLabel, usePotionBtn);
+        // NOVÉ: Tlačítka pro Save a Load systému
+        Button saveBtn = new Button("Save Game");
+        saveBtn.setMaxWidth(Double.MAX_VALUE);
+        saveBtn.setStyle("-fx-background-color: #e1f5fe; -fx-border-color: #b3e5fc;");
+        saveBtn.setOnAction(e -> {
+            game.saveGame();
+            refresh(game);
+        });
+
+        Button loadBtn = new Button("Load Game");
+        loadBtn.setMaxWidth(Double.MAX_VALUE);
+        loadBtn.setStyle("-fx-background-color: #efebe9; -fx-border-color: #d7ccc8;");
+        loadBtn.setOnAction(e -> {
+            game.loadGame();
+            refresh(game);
+        });
+
+        sidebar.getChildren().addAll(
+                sidebarTitle, characterNameLabel, healthLabel, goldLabel, attackLabel, defenseLabel,
+                itemsTitle, itemsLabel, questsTitle, questsLabel, usePotionBtn, saveBtn, loadBtn
+        );
 
         // --- BOTTOM PANEL ---
         buttonLayout = new HBox(10);
@@ -136,6 +155,7 @@ public class GameWindow {
         updateImage(currentImagePath);
 
         // Hotbar updates
+        characterNameLabel.setText("Name: " + game.getPlayer().getName()); // Zde opraveno pro správný refresh jména
         healthLabel.setText("Health: " + game.getPlayer().getHealth() + " HP");
         goldLabel.setText("Gold: " + game.getPlayer().getGold() + "g");
         attackLabel.setText("Attack: " + game.getPlayer().getAttackPower());
@@ -331,7 +351,6 @@ public class GameWindow {
                 buttonLayout.getChildren().add(talkBtn);
             }
 
-            // OPRAVA: Tlačítko zpět do vesnice se teď přidá VŽDY na konec seznamu tlačítek na Hradě
             Button backBtn = new Button("Back to Village");
             backBtn.setOnAction(e -> { game.goIntoVillage(); refresh(game); });
             buttonLayout.getChildren().add(backBtn);
