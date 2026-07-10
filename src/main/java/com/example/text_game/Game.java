@@ -1,7 +1,8 @@
 package com.example.text_game;
 
 import java.io.*;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Game {
     private Player player;
@@ -31,14 +32,26 @@ public class Game {
             writer.println(player.getGold());
             writer.println(player.getAttackPower());
             writer.println(player.getDefense());
-            writer.println(String.join(",", player.getInventory()));
+
+            // UPRAVENO: Rozbalení mapy inventáře zpět na text oddělený čárkami pro uložení
+            List<String> rawItems = new ArrayList<>();
+            player.getInventory().forEach((item, count) -> {
+                for (int i = 0; i < count; i++) {
+                    rawItems.add(item);
+                }
+            });
+            writer.println(String.join(",", rawItems));
+
             writer.println(questState);
             writer.println(actualLocation.getName());
-            // NOVÉ: Ukládání magických dat
             writer.println(player.getPlayerClass());
             writer.println(player.getMana());
             writer.println(player.getMaxMana());
             writer.println(player.getMagicAttack());
+            writer.println(player.getLevel());
+            writer.println(player.getCurrentXp());
+            writer.println(player.getXpNeeded());
+            writer.println(player.getMaxHealth());
 
             combatLog = "Game successfully saved to 'savegame.txt'!";
         } catch (IOException e) {
@@ -64,15 +77,22 @@ public class Game {
             this.questState = reader.readLine();
             String savedLocationName = reader.readLine();
 
-            // NOVÉ: Načítání magických dat
             player.setPlayerClass(reader.readLine());
             player.setMana(Integer.parseInt(reader.readLine()));
             player.setMaxMana(Integer.parseInt(reader.readLine()));
             player.setMagicAttack(Integer.parseInt(reader.readLine()));
+            player.setLevel(Integer.parseInt(reader.readLine()));
+            player.setCurrentXp(Integer.parseInt(reader.readLine()));
+            player.setXpNeeded(Integer.parseInt(reader.readLine()));
+            player.setMaxHealth(Integer.parseInt(reader.readLine()));
 
+            // UPRAVENO: Načtení a postupné naskládání (přepočítání) předmětů do mapy
             player.getInventory().clear();
             if (inventoryLine != null && !inventoryLine.trim().isEmpty()) {
-                player.getInventory().addAll(Arrays.asList(inventoryLine.split(",")));
+                String[] items = inventoryLine.split(",");
+                for (String item : items) {
+                    player.addItem(item.trim());
+                }
             }
 
             switch (savedLocationName) {
@@ -92,40 +112,14 @@ public class Game {
         }
     }
 
-    public void goIntoVillage() {
-        if (player != null) player.regenerateManaOnMove();
-        currentEnemy = null;
-        combatLog = "";
-        actualLocation = new Location("Village Square", "Safe village square.", "images/Village.png");
-    }
-
-    public void goIntoBlacksmith() {
-        player.regenerateManaOnMove();
-        combatLog = "";
-        actualLocation = new Location("Blacksmith", "The blacksmith forge.", "images/Village.png");
-    }
-
-    public void goIntoAlchemist() {
-        player.regenerateManaOnMove();
-        combatLog = "";
-        actualLocation = new Location("Alchemist", "The alchemist lab.", "images/Village.png");
-    }
-
-    public void goIntoForest() {
-        player.regenerateManaOnMove();
-        combatLog = "";
-        actualLocation = new Location("Forest", "Dark forest.", "images/Forest.png");
-        spawnEnemy();
-    }
+    public void goIntoVillage() { if (player != null) player.regenerateManaOnMove(); currentEnemy = null; combatLog = ""; actualLocation = new Location("Village Square", "Safe village square.", "images/Village.png"); }
+    public void goIntoBlacksmith() { player.regenerateManaOnMove(); combatLog = ""; actualLocation = new Location("Blacksmith", "The blacksmith forge.", "images/Village.png"); }
+    public void goIntoAlchemist() { player.regenerateManaOnMove(); combatLog = ""; actualLocation = new Location("Alchemist", "The alchemist lab.", "images/Village.png"); }
+    public void goIntoForest() { player.regenerateManaOnMove(); combatLog = ""; actualLocation = new Location("Forest", "Dark forest.", "images/Forest.png"); spawnEnemy(); }
+    public void goIntoCastle() { player.regenerateManaOnMove(); combatLog = ""; actualLocation = new Location("Castle", "The majestic throne room.", "images/Castle.png"); }
 
     public void spawnEnemy() {
         currentEnemy = new Enemy("Forest Goblin", 30, 50, 5, 12, 15, 30);
         combatLog = "A wild " + currentEnemy.getName() + " engaged you!";
-    }
-
-    public void goIntoCastle() {
-        player.regenerateManaOnMove();
-        combatLog = "";
-        actualLocation = new Location("Castle", "The majestic throne room.", "images/Castle.png");
     }
 }

@@ -6,35 +6,34 @@ public class Enemy {
     private String name;
     private int health;
     private int maxHealth;
-    private int minDmg;
-    private int maxDmg;
+    private int minDamage;
+    private int maxDamage;
     private int goldReward;
+    private int xpReward; // NOVÉ: Zkušenosti, které hráč získá
 
-    public Enemy(String name, int minHp, int maxHp, int minDmg, int maxDmg, int minGold, int maxGold) {
-        Random r = new Random();
+    public Enemy(String name, int health, int maxHealth, int minDamage, int maxDamage, int goldReward, int xpReward) {
         this.name = name;
-        this.maxHealth = r.nextInt(maxHp - minHp + 1) + minHp;
-        this.health = this.maxHealth;
-        this.minDmg = minDmg;
-        this.maxDmg = maxDmg;
-        this.goldReward = r.nextInt(maxGold - minGold + 1) + minGold;
+        this.health = health;
+        this.maxHealth = maxHealth;
+        this.minDamage = minDamage;
+        this.maxDamage = maxDamage;
+        this.goldReward = goldReward;
+        this.xpReward = xpReward;
     }
 
     public String getName() { return name; }
     public int getHealth() { return health; }
     public int getMaxHealth() { return maxHealth; }
     public int getGoldReward() { return goldReward; }
+    public int getXpReward() { return xpReward; } // NOVÉ
+    public boolean isDead() { return health <= 0; }
 
     public void takeDamage(int dmg) {
-        this.health -= dmg;
-        if (this.health < 0) this.health = 0;
+        this.health = Math.max(0, this.health - dmg);
     }
 
     public int getRandomDamage() {
-        return new Random().nextInt(maxDmg - minDmg + 1) + minDmg;
-    }
-
-    public boolean isDead() {
-        return health <= 0;
+        Random r = new Random();
+        return r.nextInt((maxDamage - minDamage) + 1) + minDamage;
     }
 }
